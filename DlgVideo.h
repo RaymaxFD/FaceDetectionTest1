@@ -8,9 +8,13 @@
 #include <StdIV.h>
 
 class CWkFaceDetection_V2;
+class CDlgVideo4Debug;
 
 class CDlgVideo : public CDialogEx, public CStdIV
 {
+private:
+	CDlgVideo4Debug* m_pDlg4Debug = nullptr;
+
 private:
 	HINSTANCE m_hInstRTSP = NULL;
 	IRTSPClient_V1* m_pICamera = nullptr;

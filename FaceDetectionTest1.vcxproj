@@ -115,10 +115,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\Project\OpenCV\OpenCV440\build\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Workerd.lib</AdditionalDependencies>
+      <AdditionalDependencies>Workerd.lib;opencv_world440d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Project\OpenCV\OpenCV440\build\x64\vc15\lib\</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -166,12 +168,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\Project\OpenCV\OpenCV440\build\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Worker.lib</AdditionalDependencies>
+      <AdditionalDependencies>Worker.lib;opencv_world440.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Project\OpenCV\OpenCV440\build\x64\vc15\lib\</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -186,6 +190,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DlgVideo.h" />
+    <ClInclude Include="DlgVideo4Debug.h" />
     <ClInclude Include="FaceDetectionTest1.h" />
     <ClInclude Include="FaceDetectionTest1Dlg.h" />
     <ClInclude Include="framework.h" />
@@ -196,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DlgVideo.cpp" />
+    <ClCompile Include="DlgVideo4Debug.cpp" />
     <ClCompile Include="FaceDetectionTest1.cpp" />
     <ClCompile Include="FaceDetectionTest1Dlg.cpp" />
     <ClCompile Include="pch.cpp">

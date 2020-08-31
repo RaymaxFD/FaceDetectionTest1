@@ -6,6 +6,7 @@
 #include "DlgVideo.h"
 #include "afxdialogex.h"
 #include "WkFaceDetection_V2.h"
+#include "DlgVideo4Debug.h"
 
 
 // CDlgVideo 대화 상자
@@ -15,6 +16,7 @@ IMPLEMENT_DYNAMIC(CDlgVideo, CDialogEx)
 CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_VIDEO, pParent)
 	, m_pFD(new CWkFaceDetection_V2)
+	, m_pDlg4Debug(new CDlgVideo4Debug)
 {
 	IMPLEMENT_IBASE;
 
@@ -42,6 +44,7 @@ CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 
 	m_pFD->StartWork();
 	m_pFD->SetIBuffPool(m_pIPool4FD);
+	m_pFD->SetIMedia4Debug(m_pDlg4Debug->GetIMedia());
 
 	m_pICamera->IMediaAdd(m_pIDec);
 	m_pIDec->IMediaAdd(m_pIDisp);
@@ -101,6 +104,9 @@ void CDlgVideo::OnDestroy()
 	IV_RELEASE(m_pIPool4Dec0);
 	IV_RELEASE(m_pIPool4Dec1);
 	IV_RELEASE(m_pIPool4FD);
+
+	m_pDlg4Debug->DestroyWindow();
+	delete m_pDlg4Debug;
 }
 
 
@@ -110,6 +116,9 @@ int CDlgVideo::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	// TODO:  여기에 특수화된 작성 코드를 추가합니다.	
+
+	m_pDlg4Debug->Create(IDD_VIDEO4DEBUG, this);
+	m_pDlg4Debug->ShowWindow(SW_SHOW);
 
 	m_pIDisp->Init(0, m_hWnd);
 	m_pIDisp->Update();
