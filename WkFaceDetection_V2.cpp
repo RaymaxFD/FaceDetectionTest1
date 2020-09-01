@@ -5,6 +5,24 @@
 #include <iostream>
 #include <ImgProc.h>
 
+#include <dlib/dnn.h>
+#include <dlib/data_io.h>
+#include <dlib/image_processing.h>
+#include <dlib/gui_widgets.h>
+#include <dlib/opencv/cv_image.h>
+
+using namespace dlib;
+
+// ----------------------------------------------------------------------------------------
+
+template <long num_filters, typename SUBNET> using con5d = con<num_filters, 5, 5, 2, 2, SUBNET>;
+template <long num_filters, typename SUBNET> using con5 = con<num_filters, 5, 5, 1, 1, SUBNET>;
+
+template <typename SUBNET> using downsampler = relu<affine<con5d<32, relu<affine<con5d<32, relu<affine<con5d<16, SUBNET>>>>>>>>>;
+template <typename SUBNET> using rcon5 = relu<affine<con5<45, SUBNET>>>;
+
+using net_type = loss_mmod<con<1, 9, 9, 1, 1, rcon5<rcon5<rcon5<downsampler<input_rgb_image_pyramid<pyramid_down<6>>>>>>>>;
+
 using namespace cv;
 using namespace std;
 
@@ -138,56 +156,14 @@ bool CWkFaceDetection_V2::DoFaceDetection()
 		goto _DoFaceDetectionCleanup;
 	}
 
-	// 이미지 크기를 4배로 줄임
-	size_t nWidthResize = m_nWidth / 4;
-	size_t nHeightResize = m_nHeight / 4;
-	m_pIPool->GetIBuffer(&pIRGBResize);
-	if (!m_pIGeo->Resize(pIRGB, pIRGBResize, m_nWidth, m_nHeight, nWidthResize, nHeightResize, 4))
 	{
-		ASSERT(0);
-		bOk = false;
-		goto _DoFaceDetectionCleanup;
+		cv::Mat mat = cv::Mat(m_nHeight, m_nWidth, CV_8UC3, pIRGB->GetBuffer());
+		cv_image<bgr_pixel> image(mat);
+		matrix<rgb_pixel> upsidedown;
+		assign_image(upsidedown, image);
+		matrix<rgb_pixel> img;
+		flip_image_up_down(upsidedown, img);
 	}
-
-	// 이전 이미지와 차연산
-	if (m_pIBuffBk)
-	{
-		m_pIPool->GetIBuffer(&pIRGBDiff);
-		if (!m_pIArith->Sub(pIRGBResize, m_pIBuffBk, pIRGBDiff, nWidthResize, nWidthResize, 4, rtROI))
-		{
-			ASSERT(0);
-			bOk = false;
-			goto _DoFaceDetectionCleanup;
-		}
-		m_pIBuffBk->SetData(pIRGBResize);
-	}
-	else
-	{
-		m_pIPool->GetIBuffer(&m_pIBuffBk);
-		goto _DoFaceDetectionCleanup;
-	}
-
-
-	// threshold
-	m_pIPool->GetIBuffer(&pIRGBThres);
-	if (!m_pIThres->Threshold(pIRGBDiff, pIRGBThres, (DWORD)nWidthResize, (DWORD)nHeightResize, 100, 255, 4, IThreshold::eGreaterThen, rtROI))
-	{
-		ASSERT(0);
-		bOk = false;
-		goto _DoFaceDetectionCleanup;
-	}
-#if false
-	{
-		IString* pIStr = _GetIStr();
-		static DWORD nCnt = 0;
-		pIStr->Format(L"d:\\temp\\FaceDetection\\test_%04d.bmp", nCnt++);
-		//SaveImgFile(pIStr->Get(), pIRGB, m_nWidth, m_nHeight, 4);
-		//SaveImgFile(pIStr->Get(), pIRGBResize, nWidthResize, nHeightResize, 4);
-		//SaveImgFile(pIStr->Get(), pIRGBDiff, nWidthResize, nHeightResize, 4);
-		SaveImgFile(pIStr->Get(), pIRGBThres, nWidthResize, nHeightResize, 4);
-		IV_RELEASE(pIStr);
-	}
-#endif
 
 _DoFaceDetectionCleanup:
 	IV_RELEASE(pIRGB);

@@ -168,14 +168,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\Project\OpenCV\OpenCV440\build\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Project\OpenCV\OpenCV440\build\include\;D:\Project\dlib\dlib-19.21\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Worker.lib;opencv_world440.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\Project\OpenCV\OpenCV440\build\x64\vc15\lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Worker.lib;opencv_world440.lib;dlib19.21.0_release_64bit_msvc1927.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);D:\Project\OpenCV\OpenCV440\build\x64\vc15\lib\</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
