@@ -14,4 +14,16 @@
 #include <IBaseGUID.h>
 #include <IV_MACRO.h>
 
+enum _eMsg
+{
+	msgFaceBegin = WM_APP,
+	msgFaceFound,
+	msgLicenseFail,
+};
+
+const int USER_ERROR__inconsistent_build_configuration__see_dlib_faq_1 = 0;
+const int USER_ERROR__inconsistent_build_configuration__see_dlib_faq_2 = 0;
+
+//#define DEBUG_VIDEO
+
 #endif //PCH_H

@@ -10,6 +10,7 @@ class CDlgVideo;
 // CFaceDetectionTest1Dlg 대화 상자
 class CFaceDetectionTest1Dlg : public CDialogEx
 {
+	DECLARE_RESIZE;
 private:
 	CDlgVideo* m_pDlgVideo = nullptr;
 
@@ -38,4 +39,5 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnDestroy();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };

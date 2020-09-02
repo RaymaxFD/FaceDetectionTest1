@@ -6,14 +6,24 @@
 #include <Component/RTSP/IRTSPClient.h>
 #include <Component/DeEncoder/IDecVideo.h>
 #include <StdIV.h>
+#include <Component/ImgAnalyser/IFaceDetection.h>
 
 class CWkFaceDetection_V2;
 class CDlgVideo4Debug;
 
-class CDlgVideo : public CDialogEx, public CStdIV
+class CDlgVideo : public CDialogEx, public CStdIV, public IEvtFaceDetection_V2, public IEvtLicense
 {
+#ifdef DEBUG_VIDEO
 private:
 	CDlgVideo4Debug* m_pDlg4Debug = nullptr;
+#endif
+
+private:
+	ILicense* m_pILic = nullptr;
+	//IEvtLicense
+protected:
+	virtual void ILicenseCheckOk() override;
+	virtual void ILicenseCheckFail() override;
 
 private:
 	HINSTANCE m_hInstRTSP = NULL;
@@ -29,8 +39,14 @@ private:
 	IDisplay2* m_pIDisp = nullptr;
 
 private:
+	HINSTANCE m_hInstFD = NULL;
+	IFaceDetection_V2* m_pIFD = nullptr;
 	IBufferPool* m_pIPool4FD = nullptr;
-	CWkFaceDetection_V2* m_pFD = nullptr;
+
+	//IEvtFaceDetection_V2
+protected:
+	virtual void IEvtFaceBeginV2() override;
+	virtual void IEvtFaceFoundV2(RECT& rtFace) override;
 
 private:
 	DECLARE_DYNAMIC(CDlgVideo)
@@ -54,4 +70,5 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 };

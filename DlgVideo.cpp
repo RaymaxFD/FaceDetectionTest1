@@ -5,7 +5,6 @@
 #include "FaceDetectionTest1.h"
 #include "DlgVideo.h"
 #include "afxdialogex.h"
-#include "WkFaceDetection_V2.h"
 #include "DlgVideo4Debug.h"
 
 
@@ -15,8 +14,9 @@ IMPLEMENT_DYNAMIC(CDlgVideo, CDialogEx)
 
 CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_VIDEO, pParent)
-	, m_pFD(new CWkFaceDetection_V2)
+#ifdef DEBUG_VIDEO
 	, m_pDlg4Debug(new CDlgVideo4Debug)
+#endif
 {
 	IMPLEMENT_IBASE;
 
@@ -42,13 +42,36 @@ CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 	m_pIDec->StreamOpen();
 	//m_pIDec->SwapUV(true);
 
-	m_pFD->StartWork();
-	m_pFD->SetIBuffPool(m_pIPool4FD);
-	m_pFD->SetIMedia4Debug(m_pDlg4Debug->GetIMedia());
+	IV_GET_IF(m_hInstFD, ID_DLL_FACEDETECTION, ID_FACEDETECTION_V2, IFaceDetection_V2, m_pIFD);
+	m_pIFD->StartWork();
+	m_pIFD->IEvtAdd(this);
+
+	m_pIFD->SetIBuffPool(m_pIPool4FD);
+	//m_pIFD->SetIMedia4Debug(m_pDlg4Debug->GetIMedia());
+	{
+		IDirectory* pIDir = _GetIDir();
+		IString* pIStrMMOD = pIDir->GetRunPath();
+		pIStrMMOD->Add1(L"\\mmod_human_face_detector.dat");
+		m_pIFD->SetMMODFile(pIStrMMOD);
+		IV_RELEASE(pIStrMMOD);
+		IV_RELEASE(pIDir);
+	}
 
 	m_pICamera->IMediaAdd(m_pIDec);
 	m_pIDec->IMediaAdd(m_pIDisp);
-	m_pIDec->IMediaAdd(m_pFD);
+	m_pIDec->IMediaAdd(m_pIFD);
+
+	m_pILic = _GetILicense();
+	m_pILic->StartWork();
+	m_pILic->IEventAdd(this);
+	{
+		IDirectory* pIDir = _GetIDir();
+		IString* pIFileLicense = pIDir->GetRunPath();
+		pIFileLicense->Add1(L"\\License.dat");
+		m_pILic->CheckLicense(pIFileLicense->Get(), (BYTE*)"9FCC933B-EFAD-4FBF-8932-A321F7948523");
+		pIFileLicense->Release();
+		pIDir->Release();
+	}
 }
 
 CDlgVideo::~CDlgVideo()
@@ -96,7 +119,7 @@ void CDlgVideo::OnDestroy()
 	IV_STOPWORK(m_pICamera);
 	m_pIDec->StreamClose();
 	IV_STOPWORK(m_pIDec);
-	IV_STOPWORK(m_pFD);
+	IV_STOPWORK(m_pIFD);
 
 	IV_STOPWORK(m_pIDisp);
 
@@ -105,8 +128,10 @@ void CDlgVideo::OnDestroy()
 	IV_RELEASE(m_pIPool4Dec1);
 	IV_RELEASE(m_pIPool4FD);
 
+#ifdef DEBUG_VIDEO
 	m_pDlg4Debug->DestroyWindow();
 	delete m_pDlg4Debug;
+#endif
 }
 
 
@@ -117,8 +142,10 @@ int CDlgVideo::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// TODO:  여기에 특수화된 작성 코드를 추가합니다.	
 
+#ifdef DEBUG_VIDEO
 	m_pDlg4Debug->Create(IDD_VIDEO4DEBUG, this);
 	m_pDlg4Debug->ShowWindow(SW_SHOW);
+#endif
 
 	m_pIDisp->Init(0, m_hWnd);
 	m_pIDisp->Update();
@@ -136,4 +163,58 @@ void CDlgVideo::OnSize(UINT nType, int cx, int cy)
 	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
 
 	m_pIDisp->OnSize();
+}
+
+void CDlgVideo::IEvtFaceBeginV2()
+{
+	PostMessage(msgFaceBegin);
+}
+
+void CDlgVideo::IEvtFaceFoundV2(RECT& rtFace)
+{
+	RECT* pRect = new RECT;
+	*pRect = rtFace;
+	PostMessage(msgFaceFound, reinterpret_cast<WPARAM>(pRect));
+}
+
+LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	// TODO: 여기에 특수화된 코드를 추가 및/또는 기본 클래스를 호출합니다.
+
+	switch (message)
+	{
+	case msgFaceBegin:
+		m_pIDisp->RectReset();
+		break;
+
+	case msgFaceFound:
+	{
+		RECT* pRect = reinterpret_cast<RECT*>(wParam);
+		COLORREF color = RGB(255, 0, 0);
+		m_pIDisp->RectAdd(*pRect, 5, color);
+		delete pRect;
+	}
+		break;
+
+	case msgLicenseFail:
+	{
+		AfxMessageBox(L"라이센스 확인에 실패하였습니다. 안면 인식이 되지 않겠습니다.");
+	}
+		break;
+
+	default:
+		break;
+	}
+
+	return __super::WindowProc(message, wParam, lParam);
+}
+
+void CDlgVideo::ILicenseCheckOk() 
+{
+	Sleep(0);
+}
+
+void CDlgVideo::ILicenseCheckFail() 
+{
+	PostMessage(msgLicenseFail);
 }

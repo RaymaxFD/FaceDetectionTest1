@@ -50,11 +50,13 @@ END_MESSAGE_MAP()
 // CFaceDetectionTest1Dlg 대화 상자
 
 
-
+IMPLEMENT_RESIZE(CFaceDetectionTest1Dlg)
 CFaceDetectionTest1Dlg::CFaceDetectionTest1Dlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FACEDETECTIONTEST1_DIALOG, pParent)
 	, m_pDlgVideo(new CDlgVideo)
 {
+	PREPARE_RESIZE;
+
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -68,6 +70,7 @@ BEGIN_MESSAGE_MAP(CFaceDetectionTest1Dlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -175,4 +178,36 @@ void CFaceDetectionTest1Dlg::OnDestroy()
 
 	m_pDlgVideo->DestroyWindow();
 	delete m_pDlgVideo;
+}
+
+
+void CFaceDetectionTest1Dlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+
+	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
+
+	BEGIN_RESIZE;
+	{
+		ADD_CONTROL(IDC_STATIC_VIDEO);
+		ADD_CONTROL(IDOK);
+		ADD_CONTROL(IDCANCEL); 
+	}
+	END_RESIZE;
+
+	BEGIN_FONT_SIZE;
+	{
+		FONT_NO_SIZE(IDC_STATIC_VIDEO);
+		FONT_NO_SIZE(IDOK);
+		FONT_NO_SIZE(IDCANCEL);
+	}
+	END_FONT_SIZE;
+
+	if (m_pDlgVideo && m_pDlgVideo->GetSafeHwnd() != NULL)
+	{
+		CRect rtVideo;
+		GetDlgItem(IDC_STATIC_VIDEO)->GetWindowRect(&rtVideo);
+		ScreenToClient(&rtVideo);
+		m_pDlgVideo->MoveWindow(&rtVideo);
+	}
 }
