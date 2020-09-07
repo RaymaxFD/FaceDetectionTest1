@@ -10,9 +10,9 @@
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
 
-#include <IBaseDll.h>
-#include <IBaseGUID.h>
-#include <IV_MACRO.h>
+#include <IBaseDll.h> // DLL 파일들을 지칭하는 GUID들
+#include <IBaseGUID.h> // DLL 안에 들어 있는 인터페이스들을 지칭하는 GUID들
+#include <IV_MACRO.h> // 잡다한 매크로들
 
 enum _eMsg
 {
@@ -20,9 +20,6 @@ enum _eMsg
 	msgFaceFound,
 	msgLicenseFail,
 };
-
-const int USER_ERROR__inconsistent_build_configuration__see_dlib_faq_1 = 0;
-const int USER_ERROR__inconsistent_build_configuration__see_dlib_faq_2 = 0;
 
 //#define DEBUG_VIDEO
 

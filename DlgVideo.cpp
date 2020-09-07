@@ -20,6 +20,7 @@ CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 {
 	IMPLEMENT_IBASE;
 
+	// 사용되는 메모리들을 미리 할당하기 위하여 필요한 IBufferPool 인터페이스들
 	m_pIPool4Cam = _GetIBufPool();
 	m_pIPool4Dec0 = _GetIBufPool();
 	m_pIPool4Dec1 = _GetIBufPool();
@@ -42,6 +43,12 @@ CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 	m_pIDec->StreamOpen();
 	//m_pIDec->SwapUV(true);
 
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+	// 실제적으로 필요하시게 될 안면 인식 인터페이스를 가져오는 부분
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
 	IV_GET_IF(m_hInstFD, ID_DLL_FACEDETECTION, ID_FACEDETECTION_V2, IFaceDetection_V2, m_pIFD);
 	m_pIFD->StartWork();
 	m_pIFD->IEvtAdd(this);
@@ -57,12 +64,14 @@ CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 		IV_RELEASE(pIDir);
 	}
 
-	m_pICamera->IMediaAdd(m_pIDec);
-	m_pIDec->IMediaAdd(m_pIDisp);
-	m_pIDec->IMediaAdd(m_pIFD);
+	// IMedia인터페이스 연결
+	m_pICamera->IMediaAdd(m_pIDec); // 카메라 -> 비디오 디코더로 
+	m_pIDec->IMediaAdd(m_pIDisp); // 디코더 -> 화면 출력으로
+	m_pIDec->IMediaAdd(m_pIFD); // 디코더 -> 안면 인식으로
 
 	m_pILic = _GetILicense();
 	m_pILic->StartWork();
+
 	m_pILic->IEventAdd(this);
 	{
 		IDirectory* pIDir = _GetIDir();
@@ -147,10 +156,22 @@ int CDlgVideo::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pDlg4Debug->ShowWindow(SW_SHOW);
 #endif
 
+	m_QueueRect.Create(20);
+
 	m_pIDisp->Init(0, m_hWnd);
 	m_pIDisp->Update();
 
-	m_pICamera->OpenURL("rtsp://192.168.0.101:554/h264");
+	IRegistry* pIReg = _GetIRegistry();
+	TCHAR strTemp[MAX_PATH];
+	DWORD dwErr = 0;
+	if (!pIReg->ReadString(L"Raymax", L"FaceDetectionTest1", L"Camera", L"RTSP_URL", strTemp, MAX_PATH, dwErr))
+	{
+		_stprintf_s(strTemp, L"rtsp://192.168.0.101:554/h264");
+		pIReg->WriteString(L"Raymax", L"FaceDetectionTest1", L"Camera", L"RTSP_URL", strTemp, dwErr);
+	}
+
+	USES_CONVERSION;
+	m_pICamera->OpenURL(W2A(strTemp));
 
 	return 0;
 }
@@ -172,9 +193,8 @@ void CDlgVideo::IEvtFaceBeginV2()
 
 void CDlgVideo::IEvtFaceFoundV2(RECT& rtFace)
 {
-	RECT* pRect = new RECT;
-	*pRect = rtFace;
-	PostMessage(msgFaceFound, reinterpret_cast<WPARAM>(pRect));
+	m_QueueRect.EnQueue(rtFace);
+	PostMessage(msgFaceFound);
 }
 
 LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -189,10 +209,12 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 	case msgFaceFound:
 	{
-		RECT* pRect = reinterpret_cast<RECT*>(wParam);
-		COLORREF color = RGB(255, 0, 0);
-		m_pIDisp->RectAdd(*pRect, 5, color);
-		delete pRect;
+		RECT rtFace;
+		while (m_QueueRect.DeQueue(rtFace))
+		{
+			COLORREF color = RGB(255, 0, 0);
+			m_pIDisp->RectAdd(rtFace, 5, color);
+		}
 	}
 		break;
 
