@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <winsock2.h>
 #include <IWorker.h>
 
 class IBufferPool;
@@ -22,10 +21,10 @@ public:
 	virtual void SetPool4Recv(IBufferPool* pI) = 0;
 
 public:
-	virtual void Send(SOCKET sock, IBuffer* pIBuff) = 0;
+	virtual void Send(UINT_PTR sock, IBuffer* pIBuff) = 0;
 
 public:
-	virtual void Kill(SOCKET sock) = 0;
+	virtual void Kill(UINT_PTR sock) = 0;
 };
 
 class IEvtSockServer
@@ -33,7 +32,7 @@ class IEvtSockServer
 public:
 	virtual void OnServerStarted(){}
 	virtual void OnServerStartFail(){}
-	virtual void OnServerNewClient(SOCKET sock){}
-	virtual void OnServerRecieved(SOCKET sock, IBuffer* pIBuff){}
-	virtual void OnServerDisconnected(SOCKET sock){}
+	virtual void OnServerNewClient(UINT_PTR sock){}
+	virtual void OnServerRecieved(UINT_PTR sock, IBuffer* pIBuff){}
+	virtual void OnServerDisconnected(UINT_PTR sock){}
 };

@@ -6,26 +6,17 @@
 #include <Component/RTSP/IRTSPClient.h> // RTSP 접속을 수행하기 위한 인터페이스 정의
 #include <Component/DeEncoder/IDecVideo.h> // FFMPEG으로 비디오 디코딩을 위한 인터페이스 정의
 #include <StdIV.h> // STDIV.dll 안에 있는 인터페이스들을 편하게 갖다 쓰기 위해 만든 helper class 정의
-#include <Component/ImgAnalyser/IFaceDetection.h> // 안면 인식을 위한 인터페이스 정의
 
 class CDlgVideo4Debug;
 
 // IEvtFaceDetection_V2 -> 안면 식별 결과가 통보됨
 // IEvtLicense -> 라이센스 확인 결과가 통보됨.
-class CDlgVideo : public CDialogEx, public CStdIV, public IEvtFaceDetection_V2, public IEvtLicense
+class CDlgVideo : public CDialogEx, public CStdIV, public IMedia
 {
 #ifdef DEBUG_VIDEO
 private:
 	CDlgVideo4Debug* m_pDlg4Debug = nullptr;
 #endif
-
-	// 라이센스 확인을 위해
-private:
-	ILicense* m_pILic = nullptr;
-	//IEvtLicense
-protected:
-	virtual void ILicenseCheckOk() override;
-	virtual void ILicenseCheckFail() override;
 
 	// RTSP를 통하여 카메라 접속을 위해
 private:
@@ -43,18 +34,26 @@ private:
 private:
 	IDisplay2* m_pIDisp = nullptr;
 
-	// 안면 인식을 수행하기 위해
 private:
-	HINSTANCE m_hInstFD = NULL;
-	IFaceDetection_V2* m_pIFD = nullptr;
-	IBufferPool* m_pIPool4FD = nullptr;
-
-	//IEvtFaceDetection_V2
+	ISyncMutex* m_pISync = nullptr;
+	HANDLE m_hSharedFoundFace = NULL;
+	HANDLE m_hSharedStrideY = NULL;
+	HANDLE m_hSharedStrideUV = NULL;
+	HANDLE m_hSharedWidth = NULL;
+	HANDLE m_hSharedHeight = NULL;
+	HANDLE m_hSharedVideoY = NULL;
+	HANDLE m_hSharedVideoU = NULL;
+	HANDLE m_hSharedVideoV = NULL;
 private:
-	CCircularQueue<RECT> m_QueueRect;
+	IBuffer* m_pIY = nullptr;
+	IBuffer* m_pIU = nullptr;
+	IBuffer* m_pIV = nullptr;
+	size_t m_strideY = 0;
+	size_t m_strideUV = 0;
+	size_t m_nWidth = 0;
+	size_t m_nHeight = 0;
 protected:
-	virtual void IEvtFaceBeginV2() override;
-	virtual void IEvtFaceFoundV2(RECT& rtFace) override;
+	virtual void NewVideoYUV(DWORD dwContextID, IBuffer* pIY, IBuffer* pIU, IBuffer* pIV, size_t strideY, size_t strideUV, size_t nWidth, size_t nHeight, _eYUV eYUV = eYUV420) override;
 
 private:
 	DECLARE_DYNAMIC(CDlgVideo)

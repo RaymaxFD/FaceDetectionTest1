@@ -18,6 +18,7 @@ class IEvtFaceDetection_V2
 public:
 	virtual void IEvtFaceBeginV2() {}
 	virtual void IEvtFaceFoundV2(RECT& rtFace) {}
+	virtual void IEvtFaceEndV2() {}
 };
 
 class IFaceDetection_V1 : public IWorker

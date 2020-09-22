@@ -19,6 +19,10 @@ enum _eMsg
 	msgFaceBegin = WM_APP,
 	msgFaceFound,
 	msgLicenseFail,
+
+	msgVideoY,
+	msgVideoU,
+	msgVideoV,
 };
 
 //#define DEBUG_VIDEO

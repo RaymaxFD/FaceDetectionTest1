@@ -1,5 +1,9 @@
 #pragma once
 
+#include <IBaseDll.h>
+#include <IBaseGUID.h>
+#include <IV_MACRO.h>
+
 #include <Component/StdYch/IDirectory.h>
 #include <Component/StdYch/IString.h>
 #include <Component/StdYch/IBufferPool.h>
@@ -20,6 +24,7 @@
 #include <Component/STDYCH/ILog.h>
 #include <Component/STDYCH/ISystemInfo.h>
 #include <Component/STDYCH/IDateTime.h>
+#include <Component/STDYCH/IGUIDGen.h>
 
 class CStdIV
 {
@@ -40,7 +45,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IDirectory* pIDir;
+		IDirectory* pIDir = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_DIRECTORY, IDirectory, pIDir);
 
 		return pIDir;
@@ -49,7 +54,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IString* pIStr = NULL;
+		IString* pIStr = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_STRING, IString, pIStr);
 
 		return pIStr;
@@ -58,7 +63,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IBufferPool* pIPool;
+		IBufferPool* pIPool = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_BUFFERPOOL, IBufferPool, pIPool);
 
 		return pIPool;
@@ -67,7 +72,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IDebug* pI;
+		IDebug* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_DEBUG, IDebug, pI);
 
 		return pI;
@@ -76,7 +81,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		ITimer* pI;
+		ITimer* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_TIMER, ITimer, pI);
 
 		return pI;
@@ -85,16 +90,17 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IStopWatch* pI;
+		IStopWatch* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_STOPWATCH, IStopWatch, pI);
 
 		return pI;
 	}
+
 	ISleep* _GetISleep()
 	{
 		IMPLEMENT_IBASE;
 
-		ISleep* pI;
+		ISleep* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_SLEEP, ISleep, pI);
 
 		return pI;
@@ -103,7 +109,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IDisplay* pI;
+		IDisplay* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_DISPLAY, IDisplay, pI);
 
 		return pI;
@@ -112,7 +118,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IDisplay2* pI;
+		IDisplay2* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_DISPLAY2, IDisplay2, pI);
 
 		return pI;
@@ -121,16 +127,17 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IFile* pI;
+		IFile* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_FILE, IFile, pI);
 
 		return pI;
 	}
+
 	IFileNameDialog* _GetIFND()
 	{
 		IMPLEMENT_IBASE;
 
-		IFileNameDialog* pI;
+		IFileNameDialog* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_FILENAMEDIALOG, IFileNameDialog, pI);
 
 		return pI;
@@ -139,7 +146,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IRegistry* pI;
+		IRegistry* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_REGISTRY, IRegistry, pI);
 
 		return pI;
@@ -148,7 +155,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		ISerial* pI;
+		ISerial* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_SERIAL, ISerial, pI);
 
 		return pI;
@@ -157,7 +164,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		ISerial2* pI;
+		ISerial2* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_SERIAL2, ISerial2, pI);
 
 		return pI;
@@ -166,7 +173,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IUtil* pI;
+		IUtil* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_UTIL, IUtil, pI);
 
 		return pI;
@@ -175,7 +182,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		ILicense* pI;
+		ILicense* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_LICENSE, ILicense, pI);
 
 		return pI;
@@ -184,7 +191,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IRelayMessage* pI;
+		IRelayMessage* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_RELAYMESSAGE, IRelayMessage, pI);
 
 		return pI;
@@ -193,7 +200,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IIniFile* pI;
+		IIniFile* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_INIFILE, IIniFile, pI);
 
 		return pI;
@@ -202,7 +209,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		ISyncMutex* pI;
+		ISyncMutex* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_SYNC_MUTEX, ISyncMutex, pI);
 
 		return pI;
@@ -211,7 +218,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		ILog* pI;
+		ILog* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_LOG, ILog, pI);
 
 		return pI;
@@ -220,7 +227,7 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		ISystemInfo* pI;
+		ISystemInfo* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_SYSTEMINFO, ISystemInfo, pI);
 
 		return pI;		
@@ -229,10 +236,19 @@ protected:
 	{
 		IMPLEMENT_IBASE;
 
-		IDateTime* pI;
+		IDateTime* pI = nullptr;
 		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_DATETIME, IDateTime, pI);
 
 		return pI;
+	}
+	IGUIDGen* _GetIGUIDGen()
+	{
+		IMPLEMENT_IBASE;
+
+		IGUIDGen* pI = nullptr;
+		IV_GET_IF(m_hInstStdIV, ID_DLL_STDIV, ID_STDIV_GUIDGEN, IGUIDGen, pI);
+
+		return pI;		
 	}
 };
 
