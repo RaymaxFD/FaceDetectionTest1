@@ -44,6 +44,7 @@ private:
 	HANDLE m_hSharedVideoY = NULL;
 	HANDLE m_hSharedVideoU = NULL;
 	HANDLE m_hSharedVideoV = NULL;
+	HANDLE m_hShareImageReady = NULL;
 private:
 	IBuffer* m_pIY = nullptr;
 	IBuffer* m_pIU = nullptr;

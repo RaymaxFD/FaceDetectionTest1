@@ -8,7 +8,7 @@ class IBufferPool : public IBase
 {
 public:
 	virtual bool CreateBufferList(size_t dwBuffSize = 1, size_t dwListLen = 10, bool bMakeMore = false) = 0;
-	virtual bool GetIBuffer(IBuffer** pp, bool bWait4Refill = true) = 0;
+	virtual bool GetIBuffer(IBuffer** pp, int iMaxTryingCnt = 100, bool bWait4Refill = true) = 0;
 	virtual void DestroyBufferList() = 0;
 	virtual size_t GetBufferSize() = 0;
 	virtual bool ChangeBufferSize(size_t dwNewSize) = 0;

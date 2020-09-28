@@ -113,6 +113,7 @@ void CDlgVideo::OnDestroy()
 	CloseHandle(m_hSharedVideoY);
 	CloseHandle(m_hSharedVideoU);
 	CloseHandle(m_hSharedVideoV);
+	CloseHandle(m_hShareImageReady);
 
 #ifdef DEBUG_VIDEO
 	m_pDlg4Debug->DestroyWindow();
@@ -126,7 +127,7 @@ int CDlgVideo::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (__super::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	// TODO:  여기에 특수화된 작성 코드를 추가합니다.	
+	// TODO:  여기에 특수화된 작성 코드를 추가합니다.
 
 #ifdef DEBUG_VIDEO
 	m_pDlg4Debug->Create(IDD_VIDEO4DEBUG, this);
@@ -207,17 +208,91 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		IV_RELEASE(m_pIV);
 		m_pIV = reinterpret_cast<IBuffer*>(wParam);
 
-		m_pISync->EnterMutex();
-		{
+		OutputDebugString(L"msgVideoV 0\r\n");
 
-			{
-				m_hSharedFoundFace = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedFoundFace");
-				if (!m_hSharedFoundFace)
-					m_hSharedFoundFace = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(sizeof(int) + sizeof(RECT) * 100), L"SharedFoundFace");
+		if (!m_pISync->EnterMutex(100))
+			break;
+
+
+		if (!m_hSharedFoundFace)
+		{
+			m_hSharedFoundFace = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedFoundFace");
+			if (!m_hSharedFoundFace)
+				m_hSharedFoundFace = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(sizeof(int) + sizeof(RECT) * 100), L"SharedFoundFace");
+		}
+
+		if (!m_hShareImageReady)
+		{
+			m_hShareImageReady = OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedReady");
+			if (!m_hShareImageReady)
+				m_hShareImageReady = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1, L"SharedReady");
+		}
+
+		if (!m_hSharedStrideY)
+		{
+			m_hSharedStrideY = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedStrideY");
+			if (!m_hSharedStrideY)
+				m_hSharedStrideY = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedStrideY");
+		}
+
+		if (!m_hSharedStrideUV)
+		{
+			m_hSharedStrideUV = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedStrideUV");
+			if (!m_hSharedStrideUV)
+				m_hSharedStrideUV = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedStrideUV");
+		}
+
+		if (!m_hSharedWidth)
+		{
+			m_hSharedWidth = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedWidth");
+			if (!m_hSharedWidth)
+				m_hSharedWidth = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedWidth");
+		}
+
+		if (!m_hSharedHeight)
+		{
+			m_hSharedHeight = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedHeight");
+			if (!m_hSharedHeight)
+				m_hSharedHeight = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedHeight");
+		}
+
+		if (!m_hSharedVideoY)
+		{
+			m_hSharedVideoY = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedVideoY");
+			if (!m_hSharedVideoY)
+				m_hSharedVideoY = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(m_strideY * m_nHeight), L"SharedVideoY");
+		}
+
+		if (!m_hSharedVideoU)
+		{
+			m_hSharedVideoU = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedVideoU");
+			if (!m_hSharedVideoU)
+				m_hSharedVideoU = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(m_strideUV * m_nHeight), L"SharedVideoU");
+		}
+
+		if (!m_hSharedVideoV)
+		{
+			m_hSharedVideoV = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedVideoV");
+			if (!m_hSharedVideoV)
+				m_hSharedVideoV = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(m_strideUV * m_nHeight), L"SharedVideoV");
+		}
+
+		if (!m_hShareImageReady)
+		{
+			m_hShareImageReady = OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedReady");
+			if (!m_hShareImageReady)
+				m_hShareImageReady = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1, L"SharedReady");
+		}
+
+		OutputDebugString(L"msgVideoV 1\r\n");
+		{
+			// 안면 인식 결과를 가져옴.
+			{				
 				BYTE* pFoundFace = (BYTE*)::MapViewOfFile(m_hSharedFoundFace, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(sizeof(int) + sizeof(RECT) * 100));
 				BYTE* pTemp = pFoundFace;
 				int iFaceCnt = *pTemp;
 				pTemp += sizeof(int);
+				OutputDebugString(L"msgVideoV 2\r\n");
 				if (iFaceCnt > 0)
 				{
 					m_pIDisp->RectReset();
@@ -233,59 +308,113 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 						//OutputDebugStringIV(L"%d %d %d %d\r\n", rtFace.left, rtFace.top, rtFace.right, rtFace.bottom);
 					}
+					OutputDebugString(L"msgVideoV 3\r\n");
+				}
+				else
+				{
+					static int iCnt = 0;
+					if (iCnt++ > 5)
+					{
+						iCnt = 0;
+						m_pIDisp->RectReset();
+					}
 				}
 				*(int*)pFoundFace = 0;
 				UnmapViewOfFile(pFoundFace);
+				OutputDebugString(L"msgVideoV 4\r\n");
 			}
 
-			m_hSharedStrideY = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedStrideY");
-			if (!m_hSharedStrideY)
-				m_hSharedStrideY = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedStrideY");
-			size_t* pStrideY = (size_t*)::MapViewOfFile(m_hSharedStrideY, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
-			*pStrideY = m_strideY;
-			UnmapViewOfFile(pStrideY);
+			// 안면 인식쪽에서 이미지를 가져가지 않았으면 다음 이미지를 입력하지 아니함.
+			bool bReady = false;			
+			BYTE* pReady = (BYTE*)::MapViewOfFile(m_hShareImageReady, FILE_MAP_ALL_ACCESS, 0, 0, 1);
+			if (!pReady)
+			{
+				m_pISync->LeaveMutex();
+				break;
+			}
+			bReady = *pReady == 1 ? true : false;
+			UnmapViewOfFile(pReady);
 
-			m_hSharedStrideUV = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedStrideUV");
-			if (!m_hSharedStrideUV)
-				m_hSharedStrideUV = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedStrideUV");
-			size_t* pStrideUV = (size_t*)::MapViewOfFile(m_hSharedStrideUV, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
-			*pStrideUV = m_strideUV;
-			UnmapViewOfFile(pStrideUV);
-
-			m_hSharedWidth = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedWidth");
-			if (!m_hSharedWidth)
-				m_hSharedWidth = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedWidth");
-			size_t* pWidth = (size_t*)::MapViewOfFile(m_hSharedWidth, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
-			*pWidth = m_nWidth;
-			UnmapViewOfFile(pWidth);
-
-			m_hSharedHeight = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedHeight");
-			if (!m_hSharedHeight)
-				m_hSharedHeight = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)sizeof(size_t), L"SharedHeight");
-			size_t* pHeight = (size_t*)::MapViewOfFile(m_hSharedHeight, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
-			*pHeight = m_nHeight;
-			UnmapViewOfFile(pHeight);
-
-			m_hSharedVideoY = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedVideoY");
-			if (!m_hSharedVideoY)
-				m_hSharedVideoY = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(m_strideY * m_nHeight), L"SharedVideoY");
-			BYTE* pY = (BYTE*)::MapViewOfFile(m_hSharedVideoY, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideY * m_nHeight));
-			CopyMemory(pY, m_pIY->GetBuffer(), m_pIY->GetBufferSizeUsed());
-			UnmapViewOfFile(pY);
-
-			m_hSharedVideoU = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedVideoU");
-			if (!m_hSharedVideoU)
-				m_hSharedVideoU = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(m_strideUV * m_nHeight), L"SharedVideoU");
-			BYTE* pU = (BYTE*)::MapViewOfFile(m_hSharedVideoU, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideUV * m_nHeight));
-			CopyMemory(pU, m_pIU->GetBuffer(), m_pIU->GetBufferSizeUsed());
-			UnmapViewOfFile(pU);
-
-			m_hSharedVideoV = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedVideoV");
-			if (!m_hSharedVideoV)
-				m_hSharedVideoV = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(m_strideUV * m_nHeight), L"SharedVideoV");
-			BYTE* pV = (BYTE*)::MapViewOfFile(m_hSharedVideoV, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideUV * m_nHeight));
-			CopyMemory(pV, m_pIV->GetBuffer(), m_pIV->GetBufferSizeUsed());
-			UnmapViewOfFile(pV);
+			OutputDebugString(L"msgVideoV 5\r\n");
+			if (!bReady)
+			{
+				//////////////////////////////////////////////////////////
+				// YUV420에 필요한 이미지 데이터들을 공유메모리에 써 넣음.
+				//////////////////////////////////////////////////////////
+				
+				size_t* pStrideY = (size_t*)::MapViewOfFile(m_hSharedStrideY, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
+				if (!pStrideY)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				*pStrideY = m_strideY;
+				UnmapViewOfFile(pStrideY);
+				OutputDebugString(L"msgVideoV 6\r\n");				
+				size_t* pStrideUV = (size_t*)::MapViewOfFile(m_hSharedStrideUV, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
+				if (!pStrideUV)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				*pStrideUV = m_strideUV;
+				UnmapViewOfFile(pStrideUV);
+				OutputDebugString(L"msgVideoV 7\r\n");				
+				size_t* pWidth = (size_t*)::MapViewOfFile(m_hSharedWidth, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
+				if (!pWidth)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				*pWidth = m_nWidth;
+				UnmapViewOfFile(pWidth);
+				OutputDebugString(L"msgVideoV 8\r\n");				
+				size_t* pHeight = (size_t*)::MapViewOfFile(m_hSharedHeight, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
+				if (!pHeight)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				*pHeight = m_nHeight;
+				UnmapViewOfFile(pHeight);
+				OutputDebugString(L"msgVideoV 9\r\n");				
+				BYTE* pY = (BYTE*)::MapViewOfFile(m_hSharedVideoY, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideY * m_nHeight));
+				if (!pY)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				CopyMemory(pY, m_pIY->GetBuffer(), m_pIY->GetBufferSizeUsed());
+				UnmapViewOfFile(pY);
+				OutputDebugString(L"msgVideoV 10\r\n");				
+				BYTE* pU = (BYTE*)::MapViewOfFile(m_hSharedVideoU, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideUV * m_nHeight));
+				if (!pU)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				CopyMemory(pU, m_pIU->GetBuffer(), m_pIU->GetBufferSizeUsed());
+				UnmapViewOfFile(pU);
+				OutputDebugString(L"msgVideoV 11\r\n");				
+				BYTE* pV = (BYTE*)::MapViewOfFile(m_hSharedVideoV, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideUV * m_nHeight));
+				if (!pV)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				CopyMemory(pV, m_pIV->GetBuffer(), m_pIV->GetBufferSizeUsed());
+				UnmapViewOfFile(pV);
+				OutputDebugString(L"msgVideoV 12\r\n");				
+				BYTE* pReady = (BYTE*)::MapViewOfFile(m_hShareImageReady, FILE_MAP_ALL_ACCESS, 0, 0, 1);
+				if (!pReady)
+				{
+					m_pISync->LeaveMutex();
+					break;
+				}
+				*pReady = 1;
+				UnmapViewOfFile(pReady);
+				OutputDebugString(L"msgVideoV 13\r\n");
+			}
 		}
 		m_pISync->LeaveMutex();
 	}
