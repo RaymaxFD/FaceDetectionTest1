@@ -50,6 +50,8 @@ CDlgVideo::CDlgVideo(CWnd* pParent /*=nullptr*/)
 	m_pICamera->IMediaAdd(m_pIDec); // 카메라 -> 비디오 디코더로 
 	m_pIDec->IMediaAdd(m_pIDisp); // 디코더 -> 화면 출력으로
 	m_pIDec->IMediaAdd(this); // 디코더 -> 안면 인식으로
+
+	m_pIIU = _GetIImgUtil();
 }
 
 CDlgVideo::~CDlgVideo()
@@ -119,6 +121,8 @@ void CDlgVideo::OnDestroy()
 	m_pDlg4Debug->DestroyWindow();
 	delete m_pDlg4Debug;
 #endif
+
+	IV_RELEASE(m_pIIU);
 }
 
 
@@ -162,6 +166,7 @@ void CDlgVideo::OnSize(UINT nType, int cx, int cy)
 	m_pIDisp->OnSize();
 }
 
+//#define DEBUG_PRINT
 LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	// TODO: 여기에 특수화된 코드를 추가 및/또는 기본 클래스를 호출합니다.
@@ -193,6 +198,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		IV_RELEASE(m_pIY);
 		m_pIY = reinterpret_cast<IBuffer*>(wParam);
+		break;
 	}
 		break;
 
@@ -200,6 +206,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		IV_RELEASE(m_pIU);
 		m_pIU = reinterpret_cast<IBuffer*>(wParam);
+		break;
 	}
 	break;
 
@@ -208,12 +215,26 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		IV_RELEASE(m_pIV);
 		m_pIV = reinterpret_cast<IBuffer*>(wParam);
 
+#ifdef DEBUG_PRINT
 		OutputDebugString(L"msgVideoV 0\r\n");
+#endif
 
-		if (!m_pISync->EnterMutex(100))
+		//Sleep(33);
+
+		if (!m_pISync->EnterMutex(1))
+		{
+			IV_RELEASE(m_pIY);
+			IV_RELEASE(m_pIU);
+			IV_RELEASE(m_pIV);
 			break;
+		}
+#ifdef DEBUG_PRINT
+		OutputDebugString(L"msgVideoV 1\r\n");
+#endif
 
-
+#ifdef DEBUG_PRINT
+		OutputDebugString(L"msgVideoV 2\r\n");
+#endif
 		if (!m_hSharedFoundFace)
 		{
 			m_hSharedFoundFace = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedFoundFace");
@@ -276,15 +297,10 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 			if (!m_hSharedVideoV)
 				m_hSharedVideoV = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(m_strideUV * m_nHeight), L"SharedVideoV");
 		}
-
-		if (!m_hShareImageReady)
-		{
-			m_hShareImageReady = OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedReady");
-			if (!m_hShareImageReady)
-				m_hShareImageReady = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1, L"SharedReady");
-		}
-
-		OutputDebugString(L"msgVideoV 1\r\n");
+#ifdef DEBUG_PRINT
+		OutputDebugString(L"msgVideoV 3\r\n");
+#endif
+		//OutputDebugString(L"msgVideoV 1\r\n");
 		{
 			// 안면 인식 결과를 가져옴.
 			{				
@@ -292,7 +308,18 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				BYTE* pTemp = pFoundFace;
 				int iFaceCnt = *pTemp;
 				pTemp += sizeof(int);
-				OutputDebugString(L"msgVideoV 2\r\n");
+
+				{
+					if (iFaceCnt > 0)
+					{
+						static DWORD dwCnt = 0;
+						CString strTemp;
+						strTemp.Format(L"FaceDetection 2 iFaceCnt : %d, dwCnt : %d\r\n", iFaceCnt, dwCnt++);
+						OutputDebugString(strTemp.GetBuffer(0));
+					}
+				}
+
+				//OutputDebugString(L"msgVideoV 2\r\n");
 				if (iFaceCnt > 0)
 				{
 					m_pIDisp->RectReset();
@@ -306,9 +333,9 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 						COLORREF color = RGB(255, 0, 0);
 						m_pIDisp->RectAdd(rtFace, 5, color);
 
-						//OutputDebugStringIV(L"%d %d %d %d\r\n", rtFace.left, rtFace.top, rtFace.right, rtFace.bottom);
+						OutputDebugStringIV(L"%d %d %d %d\r\n", rtFace.left, rtFace.top, rtFace.right, rtFace.bottom);
 					}
-					OutputDebugString(L"msgVideoV 3\r\n");
+					//OutputDebugString(L"msgVideoV 3\r\n");
 				}
 				else
 				{
@@ -321,101 +348,111 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				}
 				*(int*)pFoundFace = 0;
 				UnmapViewOfFile(pFoundFace);
-				OutputDebugString(L"msgVideoV 4\r\n");
-			}
+				//OutputDebugString(L"msgVideoV 4\r\n");
+			}			
 
-			// 안면 인식쪽에서 이미지를 가져가지 않았으면 다음 이미지를 입력하지 아니함.
-			bool bReady = false;			
-			BYTE* pReady = (BYTE*)::MapViewOfFile(m_hShareImageReady, FILE_MAP_ALL_ACCESS, 0, 0, 1);
-			if (!pReady)
-			{
-				m_pISync->LeaveMutex();
-				break;
-			}
-			bReady = *pReady == 1 ? true : false;
-			UnmapViewOfFile(pReady);
-
-			OutputDebugString(L"msgVideoV 5\r\n");
-			if (!bReady)
+			//OutputDebugString(L"msgVideoV 5\r\n");
+			//if (!bReady)
 			{
 				//////////////////////////////////////////////////////////
 				// YUV420에 필요한 이미지 데이터들을 공유메모리에 써 넣음.
 				//////////////////////////////////////////////////////////
-				
+
 				size_t* pStrideY = (size_t*)::MapViewOfFile(m_hSharedStrideY, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
 				if (!pStrideY)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
 				*pStrideY = m_strideY;
 				UnmapViewOfFile(pStrideY);
-				OutputDebugString(L"msgVideoV 6\r\n");				
+				//OutputDebugString(L"msgVideoV 6\r\n");				
 				size_t* pStrideUV = (size_t*)::MapViewOfFile(m_hSharedStrideUV, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
 				if (!pStrideUV)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
 				*pStrideUV = m_strideUV;
 				UnmapViewOfFile(pStrideUV);
-				OutputDebugString(L"msgVideoV 7\r\n");				
+				//OutputDebugString(L"msgVideoV 7\r\n");				
 				size_t* pWidth = (size_t*)::MapViewOfFile(m_hSharedWidth, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
 				if (!pWidth)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
 				*pWidth = m_nWidth;
 				UnmapViewOfFile(pWidth);
-				OutputDebugString(L"msgVideoV 8\r\n");				
+				//OutputDebugString(L"msgVideoV 8\r\n");				
 				size_t* pHeight = (size_t*)::MapViewOfFile(m_hSharedHeight, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)sizeof(size_t));
 				if (!pHeight)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
 				*pHeight = m_nHeight;
 				UnmapViewOfFile(pHeight);
-				OutputDebugString(L"msgVideoV 9\r\n");				
+				//OutputDebugString(L"msgVideoV 9\r\n");				
 				BYTE* pY = (BYTE*)::MapViewOfFile(m_hSharedVideoY, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideY * m_nHeight));
 				if (!pY)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
-				CopyMemory(pY, m_pIY->GetBuffer(), m_pIY->GetBufferSizeUsed());
+				//CopyMemory(pY, m_pIY->GetBuffer(), m_pIY->GetBufferSizeUsed());
+				m_pIIU->CopyImage(pY, m_strideY, m_pIY->GetBuffer(), m_strideY, m_nWidth, m_nHeight, 1);
 				UnmapViewOfFile(pY);
-				OutputDebugString(L"msgVideoV 10\r\n");				
+				//OutputDebugString(L"msgVideoV 10\r\n");				
 				BYTE* pU = (BYTE*)::MapViewOfFile(m_hSharedVideoU, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideUV * m_nHeight));
 				if (!pU)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
 				CopyMemory(pU, m_pIU->GetBuffer(), m_pIU->GetBufferSizeUsed());
 				UnmapViewOfFile(pU);
-				OutputDebugString(L"msgVideoV 11\r\n");				
+				//OutputDebugString(L"msgVideoV 11\r\n");				
 				BYTE* pV = (BYTE*)::MapViewOfFile(m_hSharedVideoV, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(m_strideUV * m_nHeight));
 				if (!pV)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
 				CopyMemory(pV, m_pIV->GetBuffer(), m_pIV->GetBufferSizeUsed());
 				UnmapViewOfFile(pV);
-				OutputDebugString(L"msgVideoV 12\r\n");				
+				//OutputDebugString(L"msgVideoV 12\r\n");				
 				BYTE* pReady = (BYTE*)::MapViewOfFile(m_hShareImageReady, FILE_MAP_ALL_ACCESS, 0, 0, 1);
 				if (!pReady)
 				{
-					m_pISync->LeaveMutex();
-					break;
+					//m_pISync->LeaveMutex();
+					//break;
+					goto CLEANUP;
 				}
 				*pReady = 1;
 				UnmapViewOfFile(pReady);
-				OutputDebugString(L"msgVideoV 13\r\n");
+				//OutputDebugString(L"msgVideoV 13\r\n");
 			}
+			/*else
+				Sleep(100);*/
 		}
+		//m_pISync->LeaveMutex();
+
+#ifdef DEBUG_PRINT
+		OutputDebugString(L"msgVideoV 4\r\n");
+#endif
+
+	CLEANUP:
+		IV_RELEASE(m_pIY);
+		IV_RELEASE(m_pIU);
+		IV_RELEASE(m_pIV);
 		m_pISync->LeaveMutex();
 	}
 	break;

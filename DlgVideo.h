@@ -6,13 +6,17 @@
 #include <Component/RTSP/IRTSPClient.h> // RTSP 접속을 수행하기 위한 인터페이스 정의
 #include <Component/DeEncoder/IDecVideo.h> // FFMPEG으로 비디오 디코딩을 위한 인터페이스 정의
 #include <StdIV.h> // STDIV.dll 안에 있는 인터페이스들을 편하게 갖다 쓰기 위해 만든 helper class 정의
+#include <ImgProc.h>
 
 class CDlgVideo4Debug;
 
 // IEvtFaceDetection_V2 -> 안면 식별 결과가 통보됨
 // IEvtLicense -> 라이센스 확인 결과가 통보됨.
-class CDlgVideo : public CDialogEx, public CStdIV, public IMedia
+class CDlgVideo : public CDialogEx, public CStdIV, public IMedia, public CImgProc
 {
+private:
+	IImageUtil* m_pIIU = nullptr;
+
 #ifdef DEBUG_VIDEO
 private:
 	CDlgVideo4Debug* m_pDlg4Debug = nullptr;
