@@ -70,6 +70,7 @@ BEGIN_MESSAGE_MAP(CDlgVideo, CDialogEx)
 	ON_WM_DESTROY()
 	ON_WM_CREATE()
 	ON_WM_SIZE()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -95,6 +96,8 @@ void CDlgVideo::OnDestroy()
 	__super::OnDestroy();
 
 	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
+
+	KillTimer(0);
 
 	IV_STOPWORK(m_pICamera);
 	m_pIDec->StreamClose();
@@ -146,12 +149,14 @@ int CDlgVideo::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	DWORD dwErr = 0;
 	if (!pIReg->ReadString(L"Raymax", L"FaceDetectionTest1", L"Camera", L"RTSP_URL", strTemp, MAX_PATH, dwErr))
 	{
-		_stprintf_s(strTemp, L"rtsp://192.168.0.101:554/h264");
+		_stprintf_s(strTemp, L"rtsp://192.168.1.170:554/h264");
 		pIReg->WriteString(L"Raymax", L"FaceDetectionTest1", L"Camera", L"RTSP_URL", strTemp, dwErr);
 	}
 
 	USES_CONVERSION;
 	m_pICamera->OpenURL(W2A(strTemp));
+
+	SetTimer(0, 1000, NULL);
 
 	return 0;
 }
@@ -223,11 +228,13 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (!m_pISync->EnterMutex(1))
 		{
+			OutputDebugStringIV(L"CDlgVideo EnterMutex fails........\r\n");
 			IV_RELEASE(m_pIY);
 			IV_RELEASE(m_pIU);
 			IV_RELEASE(m_pIV);
 			break;
 		}
+		Sleep(1);
 #ifdef DEBUG_PRINT
 		OutputDebugString(L"msgVideoV 1\r\n");
 #endif
@@ -309,7 +316,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				int iFaceCnt = *pTemp;
 				pTemp += sizeof(int);
 
-				{
+				/*{
 					if (iFaceCnt > 0)
 					{
 						static DWORD dwCnt = 0;
@@ -317,11 +324,13 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 						strTemp.Format(L"FaceDetection 2 iFaceCnt : %d, dwCnt : %d\r\n", iFaceCnt, dwCnt++);
 						OutputDebugString(strTemp.GetBuffer(0));
 					}
-				}
+				}*/
 
 				//OutputDebugString(L"msgVideoV 2\r\n");
 				if (iFaceCnt > 0)
 				{
+					m_iCntFountFace++;
+
 					m_pIDisp->RectReset();
 
 					RECT rtFace = {};
@@ -333,7 +342,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 						COLORREF color = RGB(255, 0, 0);
 						m_pIDisp->RectAdd(rtFace, 5, color);
 
-						OutputDebugStringIV(L"%d %d %d %d\r\n", rtFace.left, rtFace.top, rtFace.right, rtFace.bottom);
+						//OutputDebugStringIV(L"%d %d %d %d\r\n", rtFace.left, rtFace.top, rtFace.right, rtFace.bottom);
 					}
 					//OutputDebugString(L"msgVideoV 3\r\n");
 				}
@@ -454,6 +463,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		IV_RELEASE(m_pIU);
 		IV_RELEASE(m_pIV);
 		m_pISync->LeaveMutex();
+		Sleep(5);
 	}
 	break;
 
@@ -479,4 +489,24 @@ void CDlgVideo::NewVideoYUV(DWORD dwContextID, IBuffer* pIY, IBuffer* pIU, IBuff
 
 	pIV->AddRef();
 	PostMessage(msgVideoV, reinterpret_cast<WPARAM>(pIV));
+}
+
+void CDlgVideo::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+
+	switch (nIDEvent)
+	{
+	case 0:
+	{
+		OutputDebugStringYM(L"-------------> m_iCntFountFace : %d\r\n", m_iCntFountFace);
+		m_iCntFountFace = 0;
+	}
+		break;
+
+	default:
+		break;
+	}
+
+	__super::OnTimer(nIDEvent);
 }

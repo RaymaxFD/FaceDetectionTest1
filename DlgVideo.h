@@ -15,6 +15,9 @@ class CDlgVideo4Debug;
 class CDlgVideo : public CDialogEx, public CStdIV, public IMedia, public CImgProc
 {
 private:
+	int m_iCntFountFace = 0;
+
+private:
 	IImageUtil* m_pIIU = nullptr;
 
 #ifdef DEBUG_VIDEO
@@ -83,4 +86,5 @@ public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
