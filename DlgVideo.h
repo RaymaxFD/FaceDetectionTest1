@@ -15,7 +15,7 @@ class CDlgVideo4Debug;
 class CDlgVideo : public CDialogEx, public CStdIV, public IMedia, public CImgProc
 {
 private:
-	int m_iCntFountFace = 0;
+	int m_iCntFoundFace = 0;
 
 private:
 	IImageUtil* m_pIIU = nullptr;

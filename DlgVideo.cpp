@@ -228,7 +228,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (!m_pISync->EnterMutex(1))
 		{
-			OutputDebugStringIV(L"CDlgVideo EnterMutex fails........\r\n");
+			//OutputDebugStringIV(L"CDlgVideo EnterMutex fails........\r\n");
 			IV_RELEASE(m_pIY);
 			IV_RELEASE(m_pIU);
 			IV_RELEASE(m_pIV);
@@ -329,7 +329,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				//OutputDebugString(L"msgVideoV 2\r\n");
 				if (iFaceCnt > 0)
 				{
-					m_iCntFountFace++;
+					m_iCntFoundFace++;
 
 					m_pIDisp->RectReset();
 
@@ -499,8 +499,8 @@ void CDlgVideo::OnTimer(UINT_PTR nIDEvent)
 	{
 	case 0:
 	{
-		OutputDebugStringYM(L"-------------> m_iCntFountFace : %d\r\n", m_iCntFountFace);
-		m_iCntFountFace = 0;
+		OutputDebugStringYM(L"-------------> m_iCntFoundFace : %d\r\n", m_iCntFoundFace);
+		m_iCntFoundFace = 0;
 	}
 		break;
 
