@@ -9,6 +9,9 @@
 
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
+#include <afxsock.h>
+
+#include <afxsock.h>            // MFC socket extensions
 
 #include <IBaseDll.h> // DLL 파일들을 지칭하는 GUID들
 #include <IBaseGUID.h> // DLL 안에 들어 있는 인터페이스들을 지칭하는 GUID들
@@ -23,6 +26,10 @@ enum _eMsg
 	msgVideoY,
 	msgVideoU,
 	msgVideoV,
+
+	msgNewFaceNew,
+	msgNewFaceLT,
+	msgNewFaceRB,
 };
 
 //#define DEBUG_VIDEO

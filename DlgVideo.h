@@ -16,6 +16,7 @@ class CDlgVideo : public CDialogEx, public CStdIV, public IMedia, public CImgPro
 {
 private:
 	int m_iCntFoundFace = 0;
+	CRect m_rtFace;
 
 private:
 	IImageUtil* m_pIIU = nullptr;
@@ -43,7 +44,7 @@ private:
 
 private:
 	ISyncMutex* m_pISync = nullptr;
-	HANDLE m_hSharedFoundFace = NULL;
+	//HANDLE m_hSharedFoundFace = NULL;
 	HANDLE m_hSharedStrideY = NULL;
 	HANDLE m_hSharedStrideUV = NULL;
 	HANDLE m_hSharedWidth = NULL;

@@ -110,7 +110,7 @@ void CDlgVideo::OnDestroy()
 	IV_RELEASE(m_pIPool4Dec1);
 
 	IV_RELEASE(m_pISync);
-	CloseHandle(m_hSharedFoundFace);
+	//CloseHandle(m_hSharedFoundFace);
 	CloseHandle(m_hSharedStrideY);
 	CloseHandle(m_hSharedStrideUV);
 	CloseHandle(m_hSharedWidth);
@@ -178,6 +178,25 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message)
 	{
+	case msgNewFaceNew:
+		m_pIDisp->RectReset();
+		break;
+
+	case msgNewFaceLT:
+		m_rtFace.left = wParam;
+		m_rtFace.top = lParam;
+		break;
+
+	case msgNewFaceRB:
+	{
+		m_rtFace.right = wParam;
+		m_rtFace.bottom = lParam;
+		COLORREF color = RGB(255, 0, 0);
+		m_pIDisp->RectAdd(m_rtFace, 5, color);
+		OutputDebugStringIV(L"m_rtFace.left : %d, m_rtFace.top : %d, m_rtFace.right : %d, m_rtFace.bottom : %d\r\n", m_rtFace.left, m_rtFace.top, m_rtFace.right, m_rtFace.bottom);
+	}
+		break;
+
 	/*case msgFaceBegin:
 		m_pIDisp->RectReset();
 		break;
@@ -242,12 +261,12 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef DEBUG_PRINT
 		OutputDebugString(L"msgVideoV 2\r\n");
 #endif
-		if (!m_hSharedFoundFace)
+		/*if (!m_hSharedFoundFace)
 		{
 			m_hSharedFoundFace = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, NULL, L"SharedFoundFace");
 			if (!m_hSharedFoundFace)
 				m_hSharedFoundFace = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(sizeof(int) + sizeof(RECT) * 100), L"SharedFoundFace");
-		}
+		}*/
 
 		if (!m_hShareImageReady)
 		{
@@ -310,6 +329,7 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		//OutputDebugString(L"msgVideoV 1\r\n");
 		{
 			// 안면 인식 결과를 가져옴.
+#if false
 			{				
 				BYTE* pFoundFace = (BYTE*)::MapViewOfFile(m_hSharedFoundFace, FILE_MAP_ALL_ACCESS, 0, 0, (DWORD)(sizeof(int) + sizeof(RECT) * 100));
 				BYTE* pTemp = pFoundFace;
@@ -358,7 +378,8 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				*(int*)pFoundFace = 0;
 				UnmapViewOfFile(pFoundFace);
 				//OutputDebugString(L"msgVideoV 4\r\n");
-			}			
+			}
+#endif
 
 			//OutputDebugString(L"msgVideoV 5\r\n");
 			//if (!bReady)

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "ListenSocket.h"
+
 class CDlgVideo;
 
 
@@ -11,8 +13,10 @@ class CDlgVideo;
 class CFaceDetectionTest1Dlg : public CDialogEx
 {
 	DECLARE_RESIZE;
+
 private:
 	CDlgVideo* m_pDlgVideo = nullptr;
+	CListenSocket m_ListenSocket;
 
 // 생성입니다.
 public:
@@ -40,4 +44,5 @@ protected:
 public:
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 };

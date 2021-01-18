@@ -116,6 +116,15 @@ BOOL CFaceDetectionTest1Dlg::OnInitDialog()
 	}
 	m_pDlgVideo->ShowWindow(SW_SHOW);
 
+	if (m_ListenSocket.Create(1234, SOCK_STREAM)) { // 소켓생성
+		if (!m_ListenSocket.Listen()) {
+			AfxMessageBox(_T("ERROR:Listen() return False"));
+		}
+	}
+	else {
+		AfxMessageBox(_T("ERROR:Failed to create server socket!"));
+	}
+
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -210,4 +219,25 @@ void CFaceDetectionTest1Dlg::OnSize(UINT nType, int cx, int cy)
 		ScreenToClient(&rtVideo);
 		m_pDlgVideo->MoveWindow(&rtVideo);
 	}
+}
+
+
+
+LRESULT CFaceDetectionTest1Dlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	// TODO: 여기에 특수화된 코드를 추가 및/또는 기본 클래스를 호출합니다.
+
+	switch (message)
+	{
+	case msgNewFaceNew:
+	case msgNewFaceLT:
+	case msgNewFaceRB:
+		m_pDlgVideo->PostMessage(message, wParam, lParam);
+		break;
+
+	default:
+		break;
+	}
+
+	return CDialogEx::WindowProc(message, wParam, lParam);
 }

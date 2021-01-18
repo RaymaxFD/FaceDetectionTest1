@@ -52,6 +52,12 @@ BOOL CFaceDetectionTest1App::InitInstance()
 
 	CWinApp::InitInstance();
 
+	if (!AfxSocketInit())
+	{
+		AfxMessageBox(L"AfxSocketInit() fails");
+		return FALSE;
+	}
+
 
 	AfxEnableControlContainer();
 
