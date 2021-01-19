@@ -193,7 +193,8 @@ LRESULT CDlgVideo::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		m_rtFace.bottom = lParam;
 		COLORREF color = RGB(255, 0, 0);
 		m_pIDisp->RectAdd(m_rtFace, 5, color);
-		OutputDebugStringIV(L"m_rtFace.left : %d, m_rtFace.top : %d, m_rtFace.right : %d, m_rtFace.bottom : %d\r\n", m_rtFace.left, m_rtFace.top, m_rtFace.right, m_rtFace.bottom);
+		m_iCntFoundFace++;
+		//OutputDebugStringIV(L"m_rtFace.left : %d, m_rtFace.top : %d, m_rtFace.right : %d, m_rtFace.bottom : %d\r\n", m_rtFace.left, m_rtFace.top, m_rtFace.right, m_rtFace.bottom);
 	}
 		break;
 

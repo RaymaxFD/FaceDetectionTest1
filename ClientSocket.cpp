@@ -52,16 +52,17 @@ void CClientSocket::OnReceive(int nErrorCode)
 	{
 		char* pLen = pStart + strlen("STRT,");
 		int nLen = *(int*)pLen;
-		int nSizeLen = sizeof(int) + strlen(",");
-		int nRectLen = sizeof(RECT) + strlen(",") * 4;
-		int nPacketLen = strlen("STRT,") + nSizeLen + nLen * nRectLen;
+		int nSizeLen = (int)(sizeof(int) + strlen(","));
+		int nRectLen = (int)(sizeof(RECT) + strlen(",") * 4);
+		int nPacketLen = (int)(strlen("STRT,") + nSizeLen + nLen * nRectLen);
 		if (nRecv < nPacketLen)
 		{
-			OutputDebugStringYM(L"%d < %d\r\n", nRecv, nPacketLen)
+			//OutputDebugStringYM(L"%d < %d\r\n", nRecv, nPacketLen)
 			goto _RECV_END;
 		}
 
 		mVecRect.clear();
+		//OutputDebugStringYM(L"msgNewFaceNew\r\n");
 		AfxGetMainWnd()->PostMessage(msgNewFaceNew);
 		char* pRect = pLen + sizeof(int) + strlen(",");
 		int i = 0;
@@ -80,10 +81,10 @@ void CClientSocket::OnReceive(int nErrorCode)
 			mVecRect.push_back(rect);
 			AfxGetMainWnd()->PostMessage(msgNewFaceLT, (WPARAM)rect.left, (LPARAM)rect.top);
 			AfxGetMainWnd()->PostMessage(msgNewFaceRB, (WPARAM)rect.right, (LPARAM)rect.bottom);
-			OutputDebugStringIV(L"rect.left : %d, rect.top : %d, rect.right : %d, rect.bottom : %d\r\n", rect.left, rect.top, rect.right, rect.bottom);
+			//OutputDebugStringIV(L"rect.left : %d, rect.top : %d, rect.right : %d, rect.bottom : %d\r\n", rect.left, rect.top, rect.right, rect.bottom);
 		}
 		
-		OutputDebugStringYM(L"%d - %d = %d", nRecv, nPacketLen, nRecv - nPacketLen);
+		//OutputDebugStringYM(L"%d - %d = %d", nRecv, nPacketLen, nRecv - nPacketLen);
 		nRecv -= nPacketLen;
 	}
 	else
