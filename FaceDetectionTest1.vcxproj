@@ -119,7 +119,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Workerd.lib;opencv_world440d.lib;dlib19.21.0_debug_64bit_msvc1927.lib;D:\Program Files\NVIDIA Corporation\CUDA Samples\v11.0\lib\x64\cudart_static.lib;D:\Program Files\NVIDIA Corporation\CUDA Samples\v11.0\lib\x64\cublas.lib;D:\Program Files\NVIDIA Corporation\CUDA Samples\v11.0\lib\x64\cudnn.lib;D:\Program Files\NVIDIA Corporation\CUDA Samples\v11.0\lib\x64\curand.lib;D:\Program Files\NVIDIA Corporation\CUDA Samples\v11.0\lib\x64\cusolver.lib;D:\Program Files\NVIDIA Corporation\CUDA Samples\v11.0\lib\x64\cudart.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\Project\OpenCV\OpenCV440\build\x64\vc15\lib\;D:\Project\dlib\dlib-19.21\Output\dlib\Debug\</AdditionalLibraryDirectories>
     </Link>
     <Midl>
@@ -174,7 +175,8 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Worker.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\Project\OpenCV\OpenCV440\build\x64\vc15\lib\;D:\Project\dlib\dlib-19.21\Output\dlib\Release\</AdditionalLibraryDirectories>
     </Link>
     <Midl>
