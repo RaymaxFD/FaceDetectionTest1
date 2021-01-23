@@ -42,14 +42,17 @@ void CClientSocket::OnClose(int nErrorCode)
 void CClientSocket::OnReceive(int nErrorCode)
 {
 	nRecv += Receive(mBuffer + nRecv, BUFF_LEN - nRecv);
-	if (nRecv < 9)
-	{
-		OutputDebugStringYM(L"%d < 8\r\n", nRecv);
-		goto _RECV_END;
-	}
+
 	char* pStart = strstr(mBuffer, "STRT,");
 	if (pStart)
 	{
+
+		if (nRecv - (pStart - mBuffer) < 9)
+		{
+			OutputDebugStringYM(L"%d < 9\r\n", nRecv - (pStart - mBuffer));
+			goto _RECV_END;
+		}
+
 		char* pLen = pStart + strlen("STRT,");
 		int nLen = *(int*)pLen;
 		int nSizeLen = (int)(sizeof(int) + strlen(","));
@@ -81,7 +84,7 @@ void CClientSocket::OnReceive(int nErrorCode)
 			mVecRect.push_back(rect);
 			AfxGetMainWnd()->PostMessage(msgNewFaceLT, (WPARAM)rect.left, (LPARAM)rect.top);
 			AfxGetMainWnd()->PostMessage(msgNewFaceRB, (WPARAM)rect.right, (LPARAM)rect.bottom);
-			//OutputDebugStringIV(L"rect.left : %d, rect.top : %d, rect.right : %d, rect.bottom : %d\r\n", rect.left, rect.top, rect.right, rect.bottom);
+			OutputDebugStringIV(L"rect.left : %d, rect.top : %d, rect.right : %d, rect.bottom : %d\r\n", rect.left, rect.top, rect.right, rect.bottom);
 		}
 		
 		//OutputDebugStringYM(L"%d - %d = %d", nRecv, nPacketLen, nRecv - nPacketLen);

@@ -521,7 +521,7 @@ void CDlgVideo::OnTimer(UINT_PTR nIDEvent)
 	{
 	case 0:
 	{
-		OutputDebugStringYM(L"-------------> m_iCntFoundFace : %d\r\n", m_iCntFoundFace);
+		OutputDebugStringIV(L"-------------> m_iCntFoundFace : %d\r\n", m_iCntFoundFace);
 		m_iCntFoundFace = 0;
 	}
 		break;
